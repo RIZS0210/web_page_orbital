@@ -1,32 +1,75 @@
-// NAV TOGGLE FOR MOBILE
+// ===== MENU TOGGLE =====
 const navToggle = document.getElementById('navToggle');
 const navLinks = document.getElementById('navLinks');
+
 navToggle.addEventListener('click', () => {
   navLinks.classList.toggle('show');
+  navToggle.classList.toggle('open'); // para animación de hamburguesa
 });
 
-// CAROUSEL AUTO SCROLL
-const carousel = document.querySelector(".carousel");
-let scrollAmount = 0;
-const slideWidth = 350; 
-setInterval(() => {
-  scrollAmount += slideWidth;
-  if(scrollAmount >= carousel.scrollWidth - carousel.clientWidth) scrollAmount = 0;
-  carousel.scrollTo({ left: scrollAmount, behavior: 'smooth' });
-}, 5000);
+// ===== STICKY HEADER =====
+const header = document.querySelector('header');
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 50) header.classList.add('sticky');
+  else header.classList.remove('sticky');
+});
 
-// STORY BLOCK ANIMATION ON SCROLL
-const storyBlocks = document.querySelectorAll('.story-block');
+// ===== BACK TO TOP =====
+const backToTop = document.getElementById('backToTop');
+window.addEventListener('scroll', () => {
+  backToTop.style.display = window.scrollY > 300 ? 'block' : 'none';
+});
+backToTop.addEventListener('click', () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
 
-function revealStoryBlocks() {
-  const windowHeight = window.innerHeight;
-  storyBlocks.forEach(block => {
-    const elementTop = block.getBoundingClientRect().top;
-    if(elementTop < windowHeight - 100) {
-      block.classList.add('visible');
-    }
+// ===== CAROUSEL CON FLECHAS Y AUTOSCROLL =====
+const carousel = document.querySelector('.carousel');
+const prevBtn = document.getElementById('prev');
+const nextBtn = document.getElementById('next');
+
+let slideWidth = 360; // ancho aproximado de slide + gap
+let autoScroll = true; // activamos autoscroll
+let scrollInterval;
+
+function scrollNext() {
+  if(carousel.scrollLeft + carousel.clientWidth >= carousel.scrollWidth) {
+    carousel.scrollTo({ left: 0, behavior: 'smooth' });
+  } else {
+    carousel.scrollBy({ left: slideWidth, behavior: 'smooth' });
+  }
+}
+
+if(prevBtn && nextBtn && carousel) {
+  nextBtn.addEventListener('click', () => { scrollNext(); resetAutoScroll(); });
+  prevBtn.addEventListener('click', () => {
+    if(carousel.scrollLeft <= 0) carousel.scrollTo({ left: carousel.scrollWidth, behavior: 'smooth' });
+    else carousel.scrollBy({ left: -slideWidth, behavior: 'smooth' });
+    resetAutoScroll();
   });
 }
 
-window.addEventListener('scroll', revealStoryBlocks);
-window.addEventListener('load', revealStoryBlocks);
+// Autoscroll cada 5 segundos
+function startAutoScroll() {
+  scrollInterval = setInterval(scrollNext, 2000);
+}
+function resetAutoScroll() {
+  if(autoScroll) {
+    clearInterval(scrollInterval);
+    startAutoScroll();
+  }
+}
+if(autoScroll) startAutoScroll();
+
+// ===== SCROLL REVEAL =====
+const revealElements = document.querySelectorAll('.card, .slide, .story-block');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if(entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.2 });
+
+revealElements.forEach(el => observer.observe(el));
